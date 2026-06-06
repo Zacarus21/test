@@ -2,7 +2,7 @@
   "name": "The Tip Jar",
   "short_name": "Tip Jar",
   "description": "A quick and easy tip calculator",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#160800",
   "theme_color": "#160800",
