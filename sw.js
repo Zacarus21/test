@@ -5,9 +5,9 @@ const CACHE_NAME = 'tip-jar-v1';
 
 // These are all the files we want to save for offline use
 const FILES_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/manifest.json'
+  './',
+  './index.html',
+  './manifest.json'
 ];
 
 // When the app is first installed, save all the files
