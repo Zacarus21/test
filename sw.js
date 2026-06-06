@@ -1,7 +1,7 @@
 // The service worker caches the app's files so it works offline
 // Think of it as a little background helper that saves a copy of your app
 
-const CACHE_NAME = 'tip-jar-v1';
+const CACHE_NAME = 'tip-jar-v2';
 
 // These are all the files we want to save for offline use
 const FILES_TO_CACHE = [
