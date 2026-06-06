@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>The Tip Jar</title>
+
+  <!-- These 3 lines are what make it a PWA (installable app) -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#160800">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Tip Jar">
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      background: #160800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Courier New', Courier, monospace;
+      padding: 40px 20px;
+    }
+
+    .receipt {
+      background: #FFF8EE;
+      width: 100%;
+      max-width: 340px;
+      border-radius: 2px;
+      padding: 36px 28px 28px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+      position: relative;
+    }
+
+    /* Torn paper edge effect at top and bottom */
+    .torn-top {
+      position: absolute; top: -10px; left: 0; right: 0; height: 10px;
+      background: repeating-linear-gradient(90deg, #FFF8EE 0px, #FFF8EE 12px, transparent 12px, transparent 18px);
+    }
+    .torn-bottom {
+      position: absolute; bottom: -10px; left: 0; right: 0; height: 10px;
+      background: repeating-linear-gradient(90deg, #FFF8EE 0px, #FFF8EE 12px, transparent 12px, transparent 18px);
+    }
+
+    .header { text-align: center; margin-bottom: 22px; }
+    .stars   { font-size: 11px; letter-spacing: 5px; color: #A07830; }
+    .title   { font-size: 24px; font-weight: bold; letter-spacing: 3px; color: #2D1500; margin-top: 6px; }
+    .sub     { font-size: 9px; letter-spacing: 3.5px; color: #A07830; margin-top: 5px; }
+
+    .dots { border-top: 2px dashed #C9A87C; margin: 14px 0; }
+
+    label {
+      display: block;
+      font-size: 9px;
+      letter-spacing: 3px;
+      color: #A07830;
+      margin-bottom: 8px;
+    }
+
+    .input-wrap { position: relative; margin-bottom: 20px; }
+    .currency-sign {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      font-size: 20px; color: #2D1500; font-weight: bold; pointer-events: none;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      border: 1px solid #C9A87C;
+      background: rgba(255,255,255,0.5);
+      padding: 10px 12px 10px 30px;
+      font-size: 20px; font-family: inherit; color: #2D1500;
+      outline: none; border-radius: 2px;
+    }
+    input[type="number"]:focus { border: 2px solid #2D1500; }
+
+    .tip-buttons { display: flex; gap: 5px; margin-bottom: 8px; }
+    .tip-btn {
+      flex: 1; padding: 8px 2px;
+      border: 1px solid #C9A87C; background: transparent;
+      color: #2D1500; cursor: pointer; font-family: inherit;
+      font-size: 12px; font-weight: bold; border-radius: 2px;
+    }
+    .tip-btn.active { border: 2px solid #2D1500; background: #2D1500; color: #FFF8EE; }
+
+    .custom-tip {
+      width: 100%; padding: 8px 12px;
+      border: 1px solid #C9A87C; background: rgba(255,255,255,0.5);
+      font-size: 13px; font-family: inherit; color: #2D1500;
+      outline: none; border-radius: 2px; margin-bottom: 20px;
+    }
+    .custom-tip:focus { border: 2px solid #2D1500; }
+
+    .splitter { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; }
+    .split-btn {
+      width: 38px; height: 38px;
+      border: 1px solid #C9A87C; background: transparent;
+      font-size: 22px; cursor: pointer; color: #2D1500;
+      font-family: inherit; border-radius: 2px;
+    }
+    .split-count { flex: 1; text-align: center; font-size: 18px; font-weight: bold; color: #2D1500; }
+
+    .row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .row-label { font-size: 10px; letter-spacing: 2.5px; color: #5C3D1E; }
+    .row-value { font-size: 15px; color: #2D1500; }
+    .row.gold .row-label { color: #A07830; }
+    .row.gold .row-value { color: #A07830; }
+    .row.big  .row-value { font-size: 22px; font-weight: bold; }
+
+    #per-section { display: none; }
+
+    .footer { text-align: center; margin-top: 22px; font-size: 9px; letter-spacing: 3px; color: #C9A87C; }
+  </style>
+</head>
+<body>
+
+<div class="receipt">
+  <div class="torn-top"></div>
+
+  <div class="header">
+    <div class="stars">✦ ✦ ✦</div>
+    <div class="title">THE TIP JAR</div>
+    <div class="sub">CALCULATE · SPLIT · ENJOY</div>
+  </div>
+
+  <div class="dots"></div>
+
+  <!-- Bill amount -->
+  <label>BILL AMOUNT</label>
+  <div class="input-wrap">
+    <span class="currency-sign">£</span>
+    <input type="number" id="bill" placeholder="0.00" oninput="calculate()">
+  </div>
+
+  <!-- Tip percentage -->
+  <label>TIP PERCENTAGE</label>
+  <div class="tip-buttons">
+    <button class="tip-btn"        onclick="setTip(10)">10%</button>
+    <button class="tip-btn"        onclick="setTip(15)">15%</button>
+    <button class="tip-btn active" onclick="setTip(18)">18%</button>
+    <button class="tip-btn"        onclick="setTip(20)">20%</button>
+    <button class="tip-btn"        onclick="setTip(25)">25%</button>
+  </div>
+  <input type="number" class="custom-tip" id="customTip" placeholder="Custom %"
+    onfocus="clearPreset()" oninput="useCustomTip()">
+
+  <!-- Split between people -->
+  <label>SPLIT BETWEEN</label>
+  <div class="splitter">
+    <button class="split-btn" onclick="changePeople(-1)">−</button>
+    <div class="split-count" id="peopleDisplay">1 person</div>
+    <button class="split-btn" onclick="changePeople(1)">+</button>
+  </div>
+
+  <div class="dots"></div>
+
+  <!-- Results -->
+  <div class="row">
+    <span class="row-label">SUBTOTAL</span>
+    <span class="row-value" id="subtotal">£0.00</span>
+  </div>
+  <div class="row gold">
+    <span class="row-label" id="tipLabel">TIP (18%)</span>
+    <span class="row-value" id="tipAmount">£0.00</span>
+  </div>
+  <div class="dots"></div>
+  <div class="row big">
+    <span class="row-label">TOTAL</span>
+    <span class="row-value" id="total">£0.00</span>
+  </div>
+
+  <!-- Per-person section — only shows when splitting -->
+  <div id="per-section">
+    <div class="dots"></div>
+    <div class="row">
+      <span class="row-label">TIP / PERSON</span>
+      <span class="row-value" id="tipPer">£0.00</span>
+    </div>
+    <div class="row big gold">
+      <span class="row-label">EACH PERSON PAYS</span>
+      <span class="row-value" id="perPerson">£0.00</span>
+    </div>
+  </div>
+
+  <div class="footer">✦ THANK YOU · COME AGAIN ✦</div>
+  <div class="torn-bottom"></div>
+</div>
+
+<script>
+  // Our app's memory — these variables store the current state
+  let selectedTip = 18;
+  let people = 1;
+  let usingCustom = false;
+
+  // Format a number as a pound amount
+  function fmt(n) { return '£' + n.toFixed(2); }
+
+  // Called when a preset tip button is clicked
+  function setTip(pct) {
+    selectedTip = pct;
+    usingCustom = false;
+    document.getElementById('customTip').value = '';
+    // Update which button looks "active"
+    document.querySelectorAll('.tip-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.textContent === pct + '%');
+    });
+    calculate();
+  }
+
+  // Called when the custom tip input is focused
+  function clearPreset() {
+    document.querySelectorAll('.tip-btn').forEach(btn => btn.classList.remove('active'));
+    usingCustom = true;
+  }
+
+  function useCustomTip() { usingCustom = true; calculate(); }
+
+  // Called when + or − is pressed
+  function changePeople(delta) {
+    people = Math.max(1, people + delta);
+    document.getElementById('peopleDisplay').textContent =
+      people + (people === 1 ? ' person' : ' people');
+    document.getElementById('per-section').style.display = people > 1 ? 'block' : 'none';
+    calculate();
+  }
+
+  // The main calculation — runs every time anything changes
+  function calculate() {
+    const bill   = parseFloat(document.getElementById('bill').value) || 0;
+    const tipPct = usingCustom
+      ? (parseFloat(document.getElementById('customTip').value) || 0)
+      : selectedTip;
+    const tip   = bill * (tipPct / 100);
+    const total = bill + tip;
+
+    document.getElementById('subtotal').textContent  = fmt(bill);
+    document.getElementById('tipLabel').textContent  = `TIP (${tipPct}%)`;
+    document.getElementById('tipAmount').textContent = fmt(tip);
+    document.getElementById('total').textContent     = fmt(total);
+    document.getElementById('tipPer').textContent    = fmt(tip / people);
+    document.getElementById('perPerson').textContent = fmt(total / people);
+  }
+
+  // Register the service worker — this is what makes the app work offline
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js')
+      .then(() => console.log('Service worker registered'))
+      .catch(err => console.log('Service worker failed:', err));
+  }
+</script>
+
+</body>
+</html>
